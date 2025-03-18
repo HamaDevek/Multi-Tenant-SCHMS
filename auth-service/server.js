@@ -61,7 +61,6 @@ const publishAuditLog = async (auditData) => {
     });
   } catch (error) {
     console.error("Failed to publish audit log:", error);
-    // Fallback: Log to console
     console.log("Audit log (Kafka unavailable):", auditData);
   }
 };
@@ -82,7 +81,6 @@ passport.use(
           return done(new Error("No tenant ID provided"), null);
         }
 
-        // Check if tenant exists
         const [tenants] = await masterPool.query(
           "SELECT * FROM tenants WHERE id = ?",
           [tenantId]
@@ -92,10 +90,8 @@ passport.use(
           return done(new Error("Invalid tenant ID"), null);
         }
 
-        // Get tenant database connection
         const tenantDb = await getTenantConnection(tenantId);
 
-        // Find or create user
         const [existingUsers] = await tenantDb.query(
           'SELECT * FROM users WHERE email = ? OR (authProvider = "google" AND authProviderId = ?)',
           [profile.emails[0].value, profile.id]
@@ -104,7 +100,6 @@ passport.use(
         let user;
         if (existingUsers.length > 0) {
           user = existingUsers[0];
-          // Update auth provider info if needed
           if (
             user.authProvider !== "google" ||
             user.authProviderId !== profile.id
@@ -115,7 +110,6 @@ passport.use(
             );
           }
         } else {
-          // Create new user
           const userId = uuid.v4();
           await tenantDb.query(
             "INSERT INTO users (id, email, firstName, lastName, role, authProvider, authProviderId) VALUES (?, ?, ?, ?, ?, ?, ?)",
@@ -130,7 +124,6 @@ passport.use(
             ]
           );
 
-          // Create student profile
           await tenantDb.query(
             "INSERT INTO student_profiles (id, userId) VALUES (?, ?)",
             [uuid.v4(), userId]
@@ -185,8 +178,95 @@ passport.use(
       passReqToCallback: true,
     },
     async (req, accessToken, refreshToken, profile, done) => {
-      // Similar implementation as Google OAuth
-      // ...
+      try {
+        const tenantId = req.query.tenantId || req.query.state;
+        if (!tenantId) {
+          return done(new Error("No tenant ID provided"), null);
+        }
+
+        const [tenants] = await masterPool.query(
+          "SELECT * FROM tenants WHERE id = ?",
+          [tenantId]
+        );
+
+        if (tenants.length === 0) {
+          return done(new Error("Invalid tenant ID"), null);
+        }
+
+        const tenantDb = await getTenantConnection(tenantId);
+
+        const [existingUsers] = await tenantDb.query(
+          'SELECT * FROM users WHERE email = ? OR (authProvider = "outlook" AND authProviderId = ?)',
+          [profile.emails[0].value, profile.id]
+        );
+
+        let user;
+        if (existingUsers.length > 0) {
+          user = existingUsers[0];
+          if (
+            user.authProvider !== "outlook" ||
+            user.authProviderId !== profile.id
+          ) {
+            await tenantDb.query(
+              "UPDATE users SET authProvider = ?, authProviderId = ? WHERE id = ?",
+              ["outlook", profile.id, user.id]
+            );
+          }
+        } else {
+          const userId = uuid.v4();
+          await tenantDb.query(
+            "INSERT INTO users (id, email, firstName, lastName, role, authProvider, authProviderId) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            [
+              userId,
+              profile.emails[0].value,
+              profile.name.givenName,
+              profile.name.familyName,
+              "student",
+              "outlook",
+              profile.id,
+            ]
+          );
+
+          await tenantDb.query(
+            "INSERT INTO student_profiles (id, userId) VALUES (?, ?)",
+            [uuid.v4(), userId]
+          );
+
+          user = {
+            id: userId,
+            email: profile.emails[0].value,
+            firstName: profile.name.givenName,
+            lastName: profile.name.familyName,
+            role: "student",
+          };
+        }
+
+        await publishAuditLog({
+          userId: user.id,
+          tenantId,
+          action: "outlook_oauth_login",
+          status: "success",
+          ipAddress: req.ip,
+          userAgent: req.headers["user-agent"],
+        });
+
+        return done(null, {
+          ...user,
+          tenantId,
+        });
+      } catch (error) {
+        console.error("Microsoft OAuth error:", error);
+        await publishAuditLog({
+          userId: null,
+          tenantId: req.query.tenantId || req.query.state,
+          action: "outlook_oauth_login",
+          status: "failure",
+          ipAddress: req.ip,
+          userAgent: req.headers["user-agent"],
+          details: error.message,
+        });
+        return done(error, null);
+      }
     }
   )
 );
@@ -205,11 +285,9 @@ const getTenantConnection = async (tenantId) => {
     throw new Error(`Tenant with id ${tenantId} not found`);
   }
 
-  // Sanitize tenant ID for database name
   const sanitizedId = tenantId.replace(/-/g, "_");
   const dbName = `school_${sanitizedId}`;
 
-  // Create a connection to the tenant database
   const tenantDb = mysql.createPool({
     ...dbConfig,
     database: dbName,
@@ -248,7 +326,6 @@ const generateTokens = (user) => {
   return { accessToken, refreshToken };
 };
 
-// Health check endpoint
 app.get("/health", (req, res) => {
   res.status(200).json({
     status: "ok",
@@ -257,7 +334,7 @@ app.get("/health", (req, res) => {
   });
 });
 
-// Login endpoint
+// Login
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -270,10 +347,8 @@ app.post("/login", async (req, res) => {
       });
     }
 
-    // Get tenant database connection
     const tenantDb = await getTenantConnection(tenantId);
 
-    // Find user
     const [users] = await tenantDb.query(
       "SELECT * FROM users WHERE email = ?",
       [email]
@@ -298,7 +373,6 @@ app.post("/login", async (req, res) => {
 
     const user = users[0];
 
-    // Check if user is using OAuth
     if (user.authProvider !== "local" && user.authProvider !== null) {
       await publishAuditLog({
         userId: user.id,
@@ -316,7 +390,6 @@ app.post("/login", async (req, res) => {
       });
     }
 
-    // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
@@ -336,7 +409,6 @@ app.post("/login", async (req, res) => {
       });
     }
 
-    // Generate tokens
     const tokens = generateTokens({
       ...user,
       tenantId,
@@ -386,7 +458,6 @@ app.post("/super-admin/login", async (req, res) => {
       });
     }
 
-    // Find super admin
     const [admins] = await masterPool.query(
       "SELECT * FROM super_admins WHERE email = ?",
       [email]
@@ -411,7 +482,6 @@ app.post("/super-admin/login", async (req, res) => {
 
     const admin = admins[0];
 
-    // Verify password
     const isPasswordValid = await bcrypt.compare(password, admin.password);
 
     if (!isPasswordValid) {
@@ -431,7 +501,6 @@ app.post("/super-admin/login", async (req, res) => {
       });
     }
 
-    // Generate tokens
     const tokens = generateTokens({
       ...admin,
       role: "superAdmin",
@@ -482,10 +551,8 @@ app.post("/refresh-token", async (req, res) => {
     }
 
     try {
-      // Verify refresh token
       const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
 
-      // Generate new tokens
       const tokens = generateTokens(decoded);
 
       res.status(200).json({
@@ -531,10 +598,8 @@ app.get(
     failureRedirect: "/login-failed",
   }),
   (req, res) => {
-    // Generate tokens
     const tokens = generateTokens(req.user);
 
-    // Redirect to frontend with tokens
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
     const redirectUrl = `${frontendUrl}/oauth-callback?accessToken=${encodeURIComponent(
       tokens.accessToken
@@ -551,7 +616,6 @@ app.get("/login-failed", (req, res) => {
   });
 });
 
-// Error handler
 app.use((err, req, res, next) => {
   console.error("Error:", err);
   res.status(500).json({
@@ -565,7 +629,6 @@ app.listen(PORT, () => {
   console.log(`Auth Service running on port ${PORT}`);
 });
 
-// Handle process termination
 process.on("SIGTERM", async () => {
   console.log("SIGTERM received, shutting down gracefully");
   await producer.disconnect();

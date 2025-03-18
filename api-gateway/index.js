@@ -1,9 +1,9 @@
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const { createProxyMiddleware } = require('http-proxy-middleware');
-const rateLimit = require('express-rate-limit');
-const jwt = require('jsonwebtoken');
+const express = require("express");
+const cors = require("cors");
+const helmet = require("helmet");
+const { createProxyMiddleware } = require("http-proxy-middleware");
+const rateLimit = require("express-rate-limit");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,47 +17,50 @@ app.use(express.json());
 const globalRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later'
+  message: "Too many requests from this IP, please try again later",
 });
 
 app.use(globalRateLimiter);
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get("/health", (req, res) => {
   res.status(200).json({
-    status: 'ok',
-    gateway: 'online',
-    timestamp: new Date().toISOString()
+    status: "ok",
+    gateway: "online",
+    timestamp: new Date().toISOString(),
   });
 });
 
 // Token verification middleware
 const verifyToken = (req, res, next) => {
-  if (req.path.startsWith('/api/auth') && req.method === 'POST') {
+  if (req.path.startsWith("/api/auth") && req.method === "POST") {
     return next();
   }
 
-  if (req.path.startsWith('/api/auth/google') || req.path.startsWith('/api/auth/outlook')) {
+  if (
+    req.path.startsWith("/api/auth/google") ||
+    req.path.startsWith("/api/auth/outlook")
+  ) {
     return next();
   }
 
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ 
-      status: 'error', 
-      message: 'Authentication required' 
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({
+      status: "error",
+      message: "Authentication required",
     });
   }
 
-  const token = authHeader.split(' ')[1];
+  const token = authHeader.split(" ")[1];
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     next();
   } catch (error) {
-    return res.status(401).json({ 
-      status: 'error', 
-      message: 'Invalid or expired token' 
+    return res.status(401).json({
+      status: "error",
+      message: "Invalid or expired token",
     });
   }
 };
@@ -69,28 +72,27 @@ const circuitBreaker = {
     lastFailureTime: null,
     isOpen: false,
     threshold: 5,
-    resetTimeout: 30000 // 30 seconds
+    resetTimeout: 30000, // 30 seconds
   },
   tenant: {
     failures: 0,
     lastFailureTime: null,
     isOpen: false,
     threshold: 5,
-    resetTimeout: 30000
+    resetTimeout: 30000,
   },
   audit: {
     failures: 0,
     lastFailureTime: null,
     isOpen: false,
     threshold: 5,
-    resetTimeout: 30000
-  }
+    resetTimeout: 30000,
+  },
 };
 
 const checkCircuitBreaker = (service) => {
   const breaker = circuitBreaker[service];
-  
-  // Check if circuit breaker is open
+
   if (breaker.isOpen) {
     if (Date.now() - breaker.lastFailureTime > breaker.resetTimeout) {
       breaker.isOpen = false;
@@ -107,16 +109,16 @@ const handleProxyError = (service, err, req, res) => {
   const breaker = circuitBreaker[service];
   breaker.failures++;
   breaker.lastFailureTime = Date.now();
-  
+
   if (breaker.failures >= breaker.threshold) {
     breaker.isOpen = true;
     console.log(`Circuit breaker opened for ${service} service`);
   }
-  
+
   res.status(503).json({
-    status: 'error',
+    status: "error",
     message: `${service} service unavailable`,
-    details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    details: process.env.NODE_ENV === "development" ? err.message : undefined,
   });
 };
 
@@ -125,8 +127,8 @@ const createServiceProxy = (path, serviceUrl, service) => {
   return (req, res, next) => {
     if (!checkCircuitBreaker(service)) {
       return res.status(503).json({
-        status: 'error',
-        message: `${service} service temporarily unavailable. Please try again later.`
+        status: "error",
+        message: `${service} service temporarily unavailable. Please try again later.`,
       });
     }
 
@@ -134,35 +136,51 @@ const createServiceProxy = (path, serviceUrl, service) => {
       target: serviceUrl,
       changeOrigin: true,
       pathRewrite: {
-        [`^/api/${path}`]: '',
+        [`^/api/${path}`]: "",
       },
-      onError: (err, req, res) => handleProxyError(service, err, req, res)
+      onError: (err, req, res) => handleProxyError(service, err, req, res),
     })(req, res, next);
   };
 };
 
-// Routes
-app.use('/api/auth', createServiceProxy('auth', process.env.AUTH_SERVICE_URL, 'auth'));
-app.use('/api/tenants', verifyToken, createServiceProxy('tenants', process.env.TENANT_SERVICE_URL, 'tenant'));
-app.use('/api/users', verifyToken, createServiceProxy('users', process.env.TENANT_SERVICE_URL, 'tenant'));
-app.use('/api/admin', verifyToken, createServiceProxy('admin', process.env.TENANT_SERVICE_URL, 'tenant'));
-app.use('/api/audit', verifyToken, createServiceProxy('audit', process.env.AUDIT_SERVICE_URL, 'audit'));
+app.use(
+  "/api/auth",
+  createServiceProxy("auth", process.env.AUTH_SERVICE_URL, "auth")
+);
+app.use(
+  "/api/tenants",
+  verifyToken,
+  createServiceProxy("tenants", process.env.TENANT_SERVICE_URL, "tenant")
+);
+app.use(
+  "/api/users",
+  verifyToken,
+  createServiceProxy("users", process.env.TENANT_SERVICE_URL, "tenant")
+);
+app.use(
+  "/api/admin",
+  verifyToken,
+  createServiceProxy("admin", process.env.TENANT_SERVICE_URL, "tenant")
+);
+app.use(
+  "/api/audit",
+  verifyToken,
+  createServiceProxy("audit", process.env.AUDIT_SERVICE_URL, "audit")
+);
 
-// 404 handler
 app.use((req, res) => {
   res.status(404).json({
-    status: 'error',
-    message: 'Resource not found'
+    status: "error",
+    message: "Resource not found",
   });
 });
 
-// Error handler
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
+  console.error("Error:", err);
   res.status(500).json({
-    status: 'error',
-    message: 'Internal server error',
-    details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    status: "error",
+    message: "Internal server error",
+    details: process.env.NODE_ENV === "development" ? err.message : undefined,
   });
 });
 
