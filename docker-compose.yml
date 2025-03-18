@@ -1,0 +1,131 @@
+version: "3.8"
+
+services:
+  # API Gateway
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=development
+      - JWT_SECRET=your_jwt_secret_key_change_in_production
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - TENANT_SERVICE_URL=http://tenant-service:3002
+      - AUDIT_SERVICE_URL=http://audit-service:3003
+    depends_on:
+      - auth-service
+      - tenant-service
+      - audit-service
+    networks:
+      - school-network
+
+  # Auth Service
+  auth-service:
+    build: ./auth-service
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - NODE_ENV=development
+      - JWT_SECRET=your_jwt_secret_key_change_in_production
+      - JWT_ACCESS_EXPIRY=15m
+      - JWT_REFRESH_EXPIRY=7d
+      - DB_HOST=mysql
+      - DB_USER=root
+      - DB_PASSWORD=rootpassword
+      - DB_MASTER=school_management_master
+      - KAFKA_BROKER=kafka:9092
+      - GOOGLE_CLIENT_ID=your_google_client_id
+      - GOOGLE_CLIENT_SECRET=your_google_client_secret
+      - GOOGLE_CALLBACK_URL=http://localhost:3000/api/auth/google/callback
+      - OUTLOOK_CLIENT_ID=your_outlook_client_id
+      - OUTLOOK_CLIENT_SECRET=your_outlook_client_secret
+      - OUTLOOK_CALLBACK_URL=http://localhost:3000/api/auth/outlook/callback
+    depends_on:
+      - mysql
+      - kafka
+    networks:
+      - school-network
+
+  # Tenant Service
+  tenant-service:
+    build: ./tenant-service
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - NODE_ENV=development
+      - JWT_SECRET=your_jwt_secret_key_change_in_production
+      - DB_HOST=mysql
+      - DB_USER=root
+      - DB_PASSWORD=rootpassword
+      - DB_MASTER=school_management_master
+      - KAFKA_BROKER=kafka:9092
+    depends_on:
+      - mysql
+      - kafka
+    networks:
+      - school-network
+
+  # Audit Service
+  audit-service:
+    build: ./audit-service
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+      - NODE_ENV=development
+      - JWT_SECRET=your_jwt_secret_key_change_in_production
+      - DB_HOST=mysql
+      - DB_USER=root
+      - DB_PASSWORD=rootpassword
+      - DB_MASTER=school_management_master
+      - KAFKA_BROKER=kafka:9092
+    depends_on:
+      - mysql
+      - kafka
+    networks:
+      - school-network
+
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=school_management_master
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - school-network
+
+  # Kafka for Message Queue
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    networks:
+      - school-network
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - school-network
+
+networks:
+  school-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
