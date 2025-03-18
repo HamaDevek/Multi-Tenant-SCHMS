@@ -1,0 +1,159 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 800">
+    <!-- Background -->
+    <rect width="1000" height="800" fill="#f9f9f9"/>
+
+    <!-- Title -->
+    <text x="500" y="40" font-family="Arial" font-size="20" text-anchor="middle" font-weight="bold">Multi-Tenant School Management System - ER Diagram</text>
+
+    <!-- Master Database Section -->
+    <rect x="50" y="70" width="900" height="50" rx="5" fill="#e8f5e9" stroke="#1b5e20" stroke-width="2"/>
+    <text x="500" y="100" font-family="Arial" font-size="16" text-anchor="middle" font-weight="bold">Master Database</text>
+
+    <!-- TENANTS Table -->
+    <rect x="100" y="150" width="200" height="160" rx="5" fill="#f1f8e9" stroke="#33691e" stroke-width="2"/>
+    <rect x="100" y="150" width="200" height="30" rx="5" fill="#33691e"/>
+    <text x="200" y="170" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#ffffff">TENANTS</text>
+
+    <line x1="100" y1="180" x2="300" y2="180" stroke="#33691e" stroke-width="1"/>
+    <text x="110" y="200" font-family="Arial" font-size="12">uuid id (PK)</text>
+    <text x="110" y="220" font-family="Arial" font-size="12">string name</text>
+    <text x="110" y="240" font-family="Arial" font-size="12">string domain</text>
+    <text x="110" y="260" font-family="Arial" font-size="12">timestamp createdAt</text>
+    <text x="110" y="280" font-family="Arial" font-size="12">timestamp updatedAt</text>
+
+    <!-- SUPER_ADMINS Table -->
+    <rect x="400" y="150" width="200" height="180" rx="5" fill="#f1f8e9" stroke="#33691e" stroke-width="2"/>
+    <rect x="400" y="150" width="200" height="30" rx="5" fill="#33691e"/>
+    <text x="500" y="170" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#ffffff">SUPER_ADMINS</text>
+
+    <line x1="400" y1="180" x2="600" y2="180" stroke="#33691e" stroke-width="1"/>
+    <text x="410" y="200" font-family="Arial" font-size="12">uuid id (PK)</text>
+    <text x="410" y="220" font-family="Arial" font-size="12">string email</text>
+    <text x="410" y="240" font-family="Arial" font-size="12">string password</text>
+    <text x="410" y="260" font-family="Arial" font-size="12">string firstName</text>
+    <text x="410" y="280" font-family="Arial" font-size="12">string lastName</text>
+    <text x="410" y="300" font-family="Arial" font-size="12">timestamp createdAt</text>
+    <text x="410" y="320" font-family="Arial" font-size="12">timestamp updatedAt</text>
+
+    <!-- MASTER_AUDIT_LOGS Table -->
+    <rect x="700" y="150" width="200" height="180" rx="5" fill="#f1f8e9" stroke="#33691e" stroke-width="2"/>
+    <rect x="700" y="150" width="200" height="30" rx="5" fill="#33691e"/>
+    <text x="800" y="170" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#ffffff">MASTER_AUDIT_LOGS</text>
+
+    <line x1="700" y1="180" x2="900" y2="180" stroke="#33691e" stroke-width="1"/>
+    <text x="710" y="200" font-family="Arial" font-size="12">uuid id (PK)</text>
+    <text x="710" y="220" font-family="Arial" font-size="12">uuid userId (FK)</text>
+    <text x="710" y="240" font-family="Arial" font-size="12">string action</text>
+    <text x="710" y="260" font-family="Arial" font-size="12">enum status</text>
+    <text x="710" y="280" font-family="Arial" font-size="12">string ipAddress</text>
+    <text x="710" y="300" font-family="Arial" font-size="12">string userAgent</text>
+    <text x="710" y="320" font-family="Arial" font-size="12">text details</text>
+
+    <!-- Tenant Database Section -->
+    <rect x="50" y="370" width="900" height="50" rx="5" fill="#e1f5fe" stroke="#01579b" stroke-width="2"/>
+    <text x="500" y="400" font-family="Arial" font-size="16" text-anchor="middle" font-weight="bold">Tenant Databases (per school)</text>
+
+    <!-- USERS Table -->
+    <rect x="100" y="450" width="200" height="220" rx="5" fill="#e3f2fd" stroke="#0d47a1" stroke-width="2"/>
+    <rect x="100" y="450" width="200" height="30" rx="5" fill="#0d47a1"/>
+    <text x="200" y="470" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#ffffff">USERS</text>
+
+    <line x1="100" y1="480" x2="300" y2="480" stroke="#0d47a1" stroke-width="1"/>
+    <text x="110" y="500" font-family="Arial" font-size="12">uuid id (PK)</text>
+    <text x="110" y="520" font-family="Arial" font-size="12">string email</text>
+    <text x="110" y="540" font-family="Arial" font-size="12">string password</text>
+    <text x="110" y="560" font-family="Arial" font-size="12">string firstName</text>
+    <text x="110" y="580" font-family="Arial" font-size="12">string lastName</text>
+    <text x="110" y="600" font-family="Arial" font-size="12">enum role</text>
+    <text x="110" y="620" font-family="Arial" font-size="12">enum authProvider</text>
+    <text x="110" y="640" font-family="Arial" font-size="12">string authProviderId</text>
+    <text x="110" y="660" font-family="Arial" font-size="12" font-weight="bold" fill="#d32f2f">string createdBy</text>
+
+    <!-- STUDENT_PROFILES Table -->
+    <rect x="400" y="450" width="200" height="160" rx="5" fill="#e3f2fd" stroke="#0d47a1" stroke-width="2"/>
+    <rect x="400" y="450" width="200" height="30" rx="5" fill="#0d47a1"/>
+    <text x="500" y="470" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#ffffff">STUDENT_PROFILES</text>
+
+    <line x1="400" y1="480" x2="600" y2="480" stroke="#0d47a1" stroke-width="1"/>
+    <text x="410" y="500" font-family="Arial" font-size="12">uuid id (PK)</text>
+    <text x="410" y="520" font-family="Arial" font-size="12">uuid userId (FK)</text>
+    <text x="410" y="540" font-family="Arial" font-size="12">string grade</text>
+    <text x="410" y="560" font-family="Arial" font-size="12">date dateOfBirth</text>
+    <text x="410" y="580" font-family="Arial" font-size="12">text address</text>
+    <text x="410" y="600" font-family="Arial" font-size="12">string phoneNumber</text>
+
+    <!-- TENANT_AUDIT_LOGS Table -->
+    <rect x="700" y="450" width="200" height="180" rx="5" fill="#e3f2fd" stroke="#0d47a1" stroke-width="2"/>
+    <rect x="700" y="450" width="200" height="30" rx="5" fill="#0d47a1"/>
+    <text x="800" y="470" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#ffffff">TENANT_AUDIT_LOGS</text>
+
+    <line x1="700" y1="480" x2="900" y2="480" stroke="#0d47a1" stroke-width="1"/>
+    <text x="710" y="500" font-family="Arial" font-size="12">uuid id (PK)</text>
+    <text x="710" y="520" font-family="Arial" font-size="12">uuid userId (FK)</text>
+    <text x="710" y="540" font-family="Arial" font-size="12">string action</text>
+    <text x="710" y="560" font-family="Arial" font-size="12">enum status</text>
+    <text x="710" y="580" font-family="Arial" font-size="12">string ipAddress</text>
+    <text x="710" y="600" font-family="Arial" font-size="12">string userAgent</text>
+    <text x="710" y="620" font-family="Arial" font-size="12">text details</text>
+
+    <!-- USER_ROLES Table (New) -->
+    <rect x="400" y="620" width="200" height="140" rx="5" fill="#e3f2fd" stroke="#0d47a1" stroke-width="2"/>
+    <rect x="400" y="620" width="200" height="30" rx="5" fill="#0d47a1"/>
+    <text x="500" y="640" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#ffffff">USER_PERMISSIONS</text>
+
+    <line x1="400" y1="650" x2="600" y2="650" stroke="#0d47a1" stroke-width="1"/>
+    <text x="410" y="670" font-family="Arial" font-size="12">uuid id (PK)</text>
+    <text x="410" y="690" font-family="Arial" font-size="12">uuid userId (FK)</text>
+    <text x="410" y="710" font-family="Arial" font-size="12">string permission</text>
+    <text x="410" y="730" font-family="Arial" font-size="12">boolean isAllowed</text>
+    <text x="410" y="750" font-family="Arial" font-size="12">timestamp grantedAt</text>
+
+    <!-- Relationships -->
+    <!-- SUPER_ADMINS to MASTER_AUDIT_LOGS -->
+    <line x1="600" y1="240" x2="700" y2="240" stroke="#6a1b9a" stroke-width="2"/>
+    <text x="650" y="230" font-family="Arial" font-size="12" text-anchor="middle">performs</text>
+    <circle cx="600" cy="240" r="5" fill="#6a1b9a"/>
+    <circle cx="700" cy="240" r="5" fill="#6a1b9a"/>
+
+    <!-- TENANTS to USERS -->
+    <path d="M 200 310 L 200 370 L 200 420 L 200 450" stroke="#6a1b9a" stroke-width="2" fill="none"/>
+    <text x="220" y="380" font-family="Arial" font-size="12">contains</text>
+    <circle cx="200" cy="310" r="5" fill="#6a1b9a"/>
+    <circle cx="200" cy="450" r="5" fill="#6a1b9a"/>
+
+    <!-- USERS to TENANT_AUDIT_LOGS -->
+    <line x1="300" y1="530" x2="700" y2="530" stroke="#6a1b9a" stroke-width="2"/>
+    <text x="500" y="520" font-family="Arial" font-size="12" text-anchor="middle">generates</text>
+    <circle cx="300" cy="530" r="5" fill="#6a1b9a"/>
+    <circle cx="700" cy="530" r="5" fill="#6a1b9a"/>
+
+    <!-- USERS to STUDENT_PROFILES -->
+    <line x1="300" y1="490" x2="400" y2="490" stroke="#6a1b9a" stroke-width="2"/>
+    <text x="350" y="480" font-family="Arial" font-size="12" text-anchor="middle">has profile</text>
+    <circle cx="300" cy="490" r="5" fill="#6a1b9a"/>
+    <circle cx="400" cy="490" r="5" fill="#6a1b9a"/>
+
+    <!-- USERS to USER_ROLES -->
+    <line x1="200" y1="670" x2="400" y2="670" stroke="#6a1b9a" stroke-width="2"/>
+    <text x="290" y="660" font-family="Arial" font-size="12" text-anchor="middle">has permissions</text>
+    <circle cx="200" cy="670" r="5" fill="#6a1b9a"/>
+    <circle cx="400" cy="670" r="5" fill="#6a1b9a"/>
+
+    <!-- Legend -->
+    <rect x="50" y="700" width="900" height="80" rx="5" fill="#ffffff" stroke="#333333" stroke-width="1"/>
+    <text x="500" y="720" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold">Legend</text>
+
+    <rect x="80" y="740" width="20" height="20" fill="#33691e"/>
+    <text x="110" y="755" font-family="Arial" font-size="12">Master Database Tables</text>
+
+    <rect x="250" y="740" width="20" height="20" fill="#0d47a1"/>
+    <text x="280" y="755" font-family="Arial" font-size="12">Tenant Database Tables</text>
+
+    <line x1="400" y1="750" x2="450" y2="750" stroke="#6a1b9a" stroke-width="2"/>
+    <circle cx="400" cy="750" r="5" fill="#6a1b9a"/>
+    <circle cx="450" cy="750" r="5" fill="#6a1b9a"/>
+    <text x="500" y="755" font-family="Arial" font-size="12">Relationship</text>
+
+    <rect x="550" y="740" width="20" height="20" fill="#ffffff" stroke="#d32f2f" stroke-width="2"/>
+    <text x="650" y="755" font-family="Arial" font-size="12">New/Modified Fields for Role-Based Access Control</text>
+</svg>

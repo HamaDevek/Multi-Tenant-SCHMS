@@ -1,0 +1,1013 @@
+{
+  "info": {
+    "_postman_id": "5c119c3a-81d5-43fe-bfe1-98483026fcdc",
+    "name": "Multi-Tenant School Management System - API Documentation",
+    "description": "This document provides comprehensive information about the API endpoints available in the Multi-Tenant School Management System, including their request/response formats and required permissions.\n\n## Environment Setup\n\nBefore using the collection, set up your Postman environment with the following variables:\n\n| Variable | Description | Example Value |\n| --- | --- | --- |\n| baseUrl | Base URL of the API | [http://localhost:3000/api](http://localhost:3000/api) |\n| superAdminEmail | Email of the super admin | [admin@example.com](https://mailto:admin@example.com) |\n| superAdminPassword | Password of the super admin | admin123 |\n| tenantId | ID of the tenant being accessed | f47ac10b-58cc-4372-a567-0e02b2c3d479 |\n| accessToken | JWT access token (auto-populated after login) | eyJhbGciOiJIUzI1... |\n| refreshToken | JWT refresh token (auto-populated after login) | eyJhbGciOiJIUzI1... |\n| userId | ID of the logged-in user (auto-populated after login) | 550e8400-e29b-41d4-a716-446655440000 |\n\n## Role-Based Access Control\n\nThe API enforces the following role-based permissions:\n\n- **Super Admin**: Can access all endpoints and manage all tenants\n    \n- **Tenant Admin**: Can manage users within their tenant only\n    \n- **Student**: Limited to their own profile data\n    \n\n## Authentication Endpoints\n\n### Super Admin Login\n\n- **Endpoint**: `POST /auth/super-admin/login`\n    \n- **Description**: Login as a super administrator\n    \n- **Request Body**:\n    \n    ``` json\n    {\n      \"email\": \"admin@example.com\",\n      \"password\": \"admin123\"\n    }\n    \n     ```\n    \n- **Response**:\n    \n    ``` json\n    {\n      \"status\": \"success\",\n      \"message\": \"Super admin login successful\",\n      \"data\": {\n        \"user\": {\n          \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n          \"email\": \"admin@example.com\",\n          \"firstName\": \"Super\",\n          \"lastName\": \"Admin\",\n          \"role\": \"superAdmin\"\n        },\n        \"accessToken\": \"eyJhbGciOiJIUzI1...\",\n        \"refreshToken\": \"eyJhbGciOiJIUzI1...\"\n      }\n    }\n    \n     ```\n    \n\n### Tenant Admin Login\n\n- **Endpoint**: `POST /auth/login`\n    \n- **Description**: Login as a tenant administrator\n    \n- **Headers**:\n    - `x-tenant-id`: ID of the tenant\n        \n- **Request Body**:\n    \n    ``` json\n    {\n      \"email\": \"admin@tenant.com\",\n      \"password\": \"tenant123\"\n    }\n    \n     ```\n    \n- **Response**: Same format as super admin login\n    \n\n### Student Login\n\n- **Endpoint**: `POST /auth/student/login`\n    \n- **Description**: Login specifically as a student\n    \n- **Headers**:\n    - `x-tenant-id`: ID of the tenant\n        \n- **Request Body**:\n    \n    ``` json\n    {\n      \"email\": \"student@example.com\",\n      \"password\": \"password123\"\n    }\n    \n     ```\n    \n- **Response**:\n    \n    ``` json\n    {\n      \"status\": \"success\",\n      \"message\": \"Student login successful\",\n      \"data\": {\n        \"user\": {\n          \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n          \"email\": \"student@example.com\",\n          \"firstName\": \"Student\",\n          \"lastName\": \"Name\",\n          \"role\": \"student\"\n        },\n        \"profile\": {\n          \"id\": \"a2a0ee92-5f2e-4ded-a572-12cf1bdb97ff\",\n          \"userId\": \"550e8400-e29b-41d4-a716-446655440000\",\n          \"grade\": \"10th\",\n          \"dateOfBirth\": \"2006-05-12\",\n          \"address\": \"123 Student Ave\",\n          \"phoneNumber\": \"555-123-4567\"\n        },\n        \"accessToken\": \"eyJhbGciOiJIUzI1...\",\n        \"refreshToken\": \"eyJhbGciOiJIUzI1...\"\n      }\n    }\n    \n     ```\n    \n\n### Register New Student (Public)\n\n- **Endpoint**: `POST /auth/register`\n    \n- **Description**: Public registration for students only\n    \n- **Headers**:\n    - `x-tenant-id`: ID of the tenant\n        \n- **Request Body**:\n    \n    ``` json\n    {\n      \"email\": \"newstudent@example.com\",\n      \"password\": \"securepass123\",\n      \"firstName\": \"New\",\n      \"lastName\": \"Student\",\n      \"role\": \"student\"\n    }\n    \n     ```\n    \n- **Response**:\n    \n    ``` json\n    {\n      \"status\": \"success\",\n      \"message\": \"User registered successfully\",\n      \"data\": {\n        \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n        \"email\": \"newstudent@example.com\",\n        \"firstName\": \"New\",\n        \"lastName\": \"Student\",\n        \"role\": \"student\"\n      }\n    }\n    \n     ```\n    \n- **Note**: Attempting to set role to \"admin\" will result in an error\n    \n\n### Register User (Authenticated)\n\n- **Endpoint**: `POST /auth/register-user`\n    \n- **Description**: Register a new user (requires admin privileges)\n    \n- **Headers**:\n    - `Authorization`: Bearer token\n        \n    - `x-tenant-id`: ID of the tenant\n        \n- **Request Body**:\n    \n    ``` json\n    {\n      \"email\": \"newuser@example.com\",\n      \"password\": \"securepass123\",\n      \"firstName\": \"New\",\n      \"lastName\": \"User\",\n      \"role\": \"admin\"\n    }\n    \n     ```\n    \n- **Response**: Same format as public registration\n    \n- **Permissions**:\n    - Super Admin: Can create admin or student accounts for any tenant\n        \n    - Tenant Admin: Can create admin or student accounts for their own tenant only\n        \n    - Student: Not allowed\n        \n\n### Refresh Token\n\n- **Endpoint**: `POST /auth/refresh-token`\n    \n- **Description**: Get a new access token using a refresh token\n    \n- **Request Body**:\n    \n    ``` json\n    {\n      \"refreshToken\": \"eyJhbGciOiJIUzI1...\"\n    }\n    \n     ```\n    \n- **Response**:\n    \n    ``` json\n    {\n      \"status\": \"success\",\n      \"message\": \"Token refreshed successfully\",\n      \"data\": {\n        \"accessToken\": \"eyJhbGciOiJIUzI1...\",\n        \"refreshToken\": \"eyJhbGciOiJIUzI1...\"\n      }\n    }\n    \n     ```\n    \n\n### Change Password\n\n- **Endpoint**: `POST /auth/change-password`\n    \n- **Description**: Change the current user's password\n    \n- **Headers**:\n    - `Authorization`: Bearer token\n        \n- **Request Body**:\n    \n    ``` json\n    {\n      \"oldPassword\": \"currentPassword\",\n      \"newPassword\": \"newPassword123\"\n    }\n    \n     ```\n    \n- **Response**:\n    \n    ``` json\n    {\n      \"status\": \"success\",\n      \"message\": \"Password changed successfully\"\n    }\n    \n     ```\n    \n\n### OAuth Login\n\n- **Google**: `GET /auth/google?tenantId={tenantId}`\n    \n- **Microsoft**: `GET /auth/outlook?tenantId={tenantId}`\n    \n- **Note**: These will redirect to the OAuth provider for authentication\n    \n\n## Admin Operations (Super Admin Only)\n\n### Create Tenant Admin\n\n- **Endpoint**: `POST /admin/tenant-admin`\n    \n- **Description**: Create a new admin for a specific tenant\n    \n- **Headers**:\n    - `Authorization`: Bearer token (Super Admin)\n        \n- **Request Body**:\n    \n    ``` json\n    {\n      \"email\": \"admin@newtenant.com\",\n      \"password\": \"adminpass123\",\n      \"firstName\": \"Tenant\",\n      \"lastName\": \"Admin\",\n      \"tenantId\": \"f47ac10b-58cc-4372-a567-0e02b2c3d479\"\n    }\n    \n     ```\n    \n- **Response**:\n    \n    ``` json\n    {\n      \"status\": \"success\",\n      \"message\": \"Tenant admin created successfully\",\n      \"data\": {\n        \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n        \"email\": \"admin@newtenant.com\",\n        \"firstName\": \"Tenant\",\n        \"lastName\": \"Admin\",\n        \"role\": \"admin\",\n        \"tenantId\": \"f47ac10b-58cc-4372-a567-0e02b2c3d479\"\n      }\n    }\n    \n     ```\n    \n\n### Create Tenant with Admin\n\n- **Endpoint**: `POST /admin/tenant-with-admin`\n    \n- **Description**: Create a new tenant and admin in one operation\n    \n- **Headers**:\n    - `Authorization`: Bearer token (Super Admin)\n        \n- **Request Body**:\n    \n    ``` json\n    {\n      \"name\": \"New School\",\n      \"domain\": \"newschool.edu\",\n      \"adminEmail\": \"admin@newschool.edu\",\n      \"adminPassword\": \"adminpass123\",\n      \"adminFirstName\": \"School\",\n      \"adminLastName\": \"Administrator\"\n    }\n    \n     ```\n    \n- **Response**:\n    \n    ``` json\n    {\n      \"status\": \"success\",\n      \"message\": \"Tenant and admin created successfully\",\n      \"data\": {\n        \"tenant\": {\n          \"id\": \"f47ac10b-58cc-4372-a567-0e02b2c3d479\",\n          \"name\": \"New School\",\n          \"domain\": \"newschool.edu\"\n        },\n        \"admin\": {\n          \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n          \"email\": \"admin@newschool.edu\",\n          \"firstName\": \"School\",\n          \"lastName\": \"Administrator\",\n          \"role\": \"admin\"\n        }\n      }\n    }\n    \n     ```\n    \n\n## Tenant Management Endpoints (Super Admin Only)\n\n### Create New Tenant\n\n- **Endpoint**: `POST /tenants`\n    \n- **Description**: Create a new tenant (school)\n    \n- **Headers**:\n    - `Authorization`: Bearer token (Super Admin)\n        \n- **Request Body**:\n    \n    ``` json\n    {\n      \"name\": \"New School\",\n      \"domain\": \"newschool.edu\"\n    }\n    \n     ```\n    \n- **Response**:\n    \n    ``` json\n    {\n      \"status\": \"success\",\n      \"message\": \"Tenant created successfully\",\n      \"data\": {\n        \"id\": \"f47ac10b-58cc-4372-a567-0e02b2c3d479\",\n        \"name\": \"New School\",\n        \"domain\": \"newschool.edu\",\n        \"adminEmail\": \"admin@newschool.edu\",\n        \"adminPassword\": \"generatedPassword123\",\n        \"note\": \"Save this password, it won't be shown again!\"\n      }\n    }\n    \n     ```\n    \n\n### Get All Tenants\n\n- **Endpoint**: `GET /tenants`\n    \n- **Description**: Get a list of all tenants\n    \n- **Headers**:\n    - `Authorization`: Bearer token (Super Admin)\n        \n- **Response**:\n    \n    ``` json\n    {\n      \"status\": \"success\",\n      \"data\": [\n        {\n          \"id\": \"f47ac10b-58cc-4372-a567-0e02b2c3d479\",\n          \"name\": \"School One\",\n          \"domain\": \"schoolone.edu\",\n          \"createdAt\": \"2023-01-15T12:00:00.000Z\",\n          \"updatedAt\": \"2023-01-15T12:00:00.000Z\"\n        },\n        {\n          \"id\": \"a2a0ee92-5f2e-4ded-a572-12cf1bdb97ff\",\n          \"name\": \"School Two\",\n          \"domain\": \"schooltwo.edu\",\n          \"createdAt\": \"2023-02-20T14:30:00.000Z\",\n          \"updatedAt\": \"2023-02-20T14:30:00.000Z\"\n        }\n      ]\n    }\n    \n     ```\n    \n\n### Get/Update/Delete Tenant\n\n- **Endpoints**:\n    - `GET /tenants/{tenantId}`\n        \n    - `PATCH /tenants/{tenantId}`\n        \n    - `DELETE /tenants/{tenantId}`\n        \n- **Headers**:\n    - `Authorization`: Bearer token (Super Admin)\n        \n- **PATCH Request Body**:\n    \n    ``` json\n    {\n      \"name\": \"Updated School Name\",\n      \"domain\": \"updatedschool.edu\"\n    }\n    \n     ```\n    \n\n## User Management Endpoints\n\n### Get All Users\n\n- **Endpoint**: `GET /users`\n    \n- **Description**: Get all users in a tenant\n    \n- **Headers**:\n    - `Authorization`: Bearer token\n        \n    - `x-tenant-id`: ID of the tenant\n        \n- **Permissions**:\n    - Super Admin: Can access any tenant\n        \n    - Tenant Admin: Can access only their own tenant\n        \n    - Student: Not allowed\n        \n- **Response**:\n    \n    ``` json\n    {\n      \"status\": \"success\",\n      \"data\": [\n        {\n          \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n          \"email\": \"admin@tenant.com\",\n          \"firstName\": \"Tenant\",\n          \"lastName\": \"Admin\",\n          \"role\": \"admin\",\n          \"authProvider\": \"local\",\n          \"createdAt\": \"2023-01-15T12:00:00.000Z\",\n          \"updatedAt\": \"2023-01-15T12:00:00.000Z\"\n        },\n        {\n          \"id\": \"a2a0ee92-5f2e-4ded-a572-12cf1bdb97ff\",\n          \"email\": \"student@example.com\",\n          \"firstName\": \"Student\",\n          \"lastName\": \"Name\",\n          \"role\": \"student\",\n          \"authProvider\": \"local\",\n          \"createdAt\": \"2023-02-20T14:30:00.000Z\",\n          \"updatedAt\": \"2023-02-20T14:30:00.000Z\"\n        }\n      ]\n    }\n    \n     ```\n    \n\n### Get/Update/Delete User\n\n- **Endpoints**:\n    - `GET /users/{userId}`\n        \n    - `PATCH /users/{userId}`\n        \n    - `DELETE /users/{userId}`\n        \n- **Headers**:\n    - `Authorization`: Bearer token\n        \n    - `x-tenant-id`: ID of the tenant\n        \n- **Permissions**:\n    - Super Admin: Can access any user in any tenant\n        \n    - Tenant Admin: Can access only users in their own tenant\n        \n    - Student: Can access only their own profile\n        \n- **PATCH Request Body**:\n    \n    ``` json\n    {\n      \"firstName\": \"Updated\",\n      \"lastName\": \"Name\",\n      \"email\": \"updated@example.com\"\n    }\n    \n     ```\n    \n\n### Student Profile Endpoints\n\n- **Admin Access**:\n    - `GET /users/{userId}/profile`\n        \n    - `PATCH /users/{userId}/profile`\n        \n- **Student Direct Access**:\n    - `GET /student/profile`\n        \n    - `PATCH /student/profile`\n        \n- **Headers**:\n    - `Authorization`: Bearer token\n        \n    - `x-tenant-id`: ID of the tenant\n        \n- **PATCH Request Body**:\n    \n    ``` json\n    {\n      \"grade\": \"11th\",\n      \"address\": \"456 Oak Avenue\",\n      \"phoneNumber\": \"555-987-6543\"\n    }\n    \n     ```\n    \n- **Response**:\n    \n    ``` json\n    {\n      \"status\": \"success\",\n      \"data\": {\n        \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n        \"email\": \"student@example.com\",\n        \"firstName\": \"Student\",\n        \"lastName\": \"Name\",\n        \"role\": \"student\",\n        \"authProvider\": \"local\",\n        \"createdAt\": \"2023-01-15T12:00:00.000Z\",\n        \"updatedAt\": \"2023-01-15T12:00:00.000Z\",\n        \"profile\": {\n          \"id\": \"a2a0ee92-5f2e-4ded-a572-12cf1bdb97ff\",\n          \"userId\": \"550e8400-e29b-41d4-a716-446655440000\",\n          \"grade\": \"11th\",\n          \"dateOfBirth\": \"2006-05-12\",\n          \"address\": \"456 Oak Avenue\",\n          \"phoneNumber\": \"555-987-6543\"\n        }\n      }\n    }\n    \n     ```\n    \n\n## Audit Log Endpoints (Super Admin Only)\n\n### Get Failed Logins\n\n- **All Tenants**: `GET /tenants/audit/failed-logins`\n    \n- **Specific Tenant**: `GET /tenants/audit/{tenantId}/failed-logins`\n    \n- **Headers**:\n    - `Authorization`: Bearer token (Super Admin)\n        \n\n### Get Tenant Audit Logs\n\n- **Endpoint**: `GET /tenants/audit/{tenantId}/logs`\n    \n- **Query Parameters**:\n    - `action`: Filter by action type (e.g., \"user_login\")\n        \n    - `status`: Filter by status (\"success\" or \"failure\")\n        \n    - `startDate`: Filter by date range start (YYYY-MM-DD)\n        \n    - `endDate`: Filter by date range end (YYYY-MM-DD)\n        \n    - `limit`: Maximum number of records to return\n        \n    - `page`: Page number for pagination\n        \n- **Headers**:\n    - `Authorization`: Bearer token (Super Admin)\n        \n\n## System Health Check\n\n- **Endpoint**: `GET /health`\n    \n- **Description**: Check the health status of the API\n    \n- **Response**:\n    \n    ``` json\n    {\n      \"status\": \"ok\",\n      \"timestamp\": \"2023-05-20T15:30:45.123Z\",\n      \"environment\": \"development\"\n    }\n    \n     ```\n    \n\n## Error Responses\n\nAll endpoints follow a consistent error response format:\n\n``` json\n{\n  \"status\": \"error\",\n  \"message\": \"Error description\"\n}\n\n ```\n\nCommon HTTP status codes:\n\n- `400`: Bad request (validation error)\n    \n- `401`: Unauthorized (invalid/expired token)\n    \n- `403`: Forbidden (insufficient permissions)\n    \n- `404`: Resource not found\n    \n- `409`: Conflict (e.g., duplicate email)\n    \n- `429`: Too many requests (rate limiting)\n    \n- `500`: Internal server error\n    \n\n## Testing the API\n\n1. Start by logging in as a Super Admin using the `POST /auth/super-admin/login` endpoint\n    \n2. Create a new tenant using the `POST /tenants` endpoint\n    \n3. Use the provided tenant ID and admin credentials to test tenant-specific operations\n    \n4. Test user registration and role-based access controls across different user types\n    \n\nThe Postman collection is configured with script tests that automatically save authentication tokens and tenant IDs to your environment variables for easy testing.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "27002593"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Super Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Save tokens and user ID to global variables",
+                  "var responseJson = pm.response.json();",
+                  "if (responseJson.data && responseJson.data.accessToken) {",
+                  "    pm.globals.set('accessToken', responseJson.data.accessToken);",
+                  "    pm.globals.set('refreshToken', responseJson.data.refreshToken);",
+                  "    pm.globals.set('userId', responseJson.data.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{superAdminEmail}}\",\n  \"password\": \"{{superAdminPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/super-admin/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "super-admin",
+                "login"
+              ]
+            },
+            "description": "Login as a super administrator"
+          },
+          "response": []
+        },
+        {
+          "name": "Tenant Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Save tokens and user ID to global variables",
+                  "var responseJson = pm.response.json();",
+                  "if (responseJson.data && responseJson.data.accessToken) {",
+                  "    pm.globals.set('accessToken', responseJson.data.accessToken);",
+                  "    pm.globals.set('refreshToken', responseJson.data.refreshToken);",
+                  "    pm.globals.set('userId', responseJson.data.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "{{tenantId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@tenant.com\",\n  \"password\": \"tenant123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login as a tenant administrator"
+          },
+          "response": []
+        },
+        {
+          "name": "Student Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Save tokens and user ID to global variables",
+                  "var responseJson = pm.response.json();",
+                  "if (responseJson.data && responseJson.data.accessToken) {",
+                  "    pm.globals.set('accessToken', responseJson.data.accessToken);",
+                  "    pm.globals.set('refreshToken', responseJson.data.refreshToken);",
+                  "    pm.globals.set('userId', responseJson.data.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "{{tenantId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"student@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/student/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "student",
+                "login"
+              ]
+            },
+            "description": "Login as a student"
+          },
+          "response": []
+        },
+        {
+          "name": "Register New Student (Public)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "{{tenantId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newstudent@example.com\",\n  \"password\": \"securepass123\",\n  \"firstName\": \"New\",\n  \"lastName\": \"Student\",\n  \"role\": \"student\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Register a new student (only student role allowed for public registration)"
+          },
+          "response": []
+        },
+        {
+          "name": "Register User (Authenticated)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newuser@example.com\",\n  \"password\": \"securepass123\",\n  \"firstName\": \"New\",\n  \"lastName\": \"User\",\n  \"role\": \"admin\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register-user",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register-user"
+              ]
+            },
+            "description": "Register a new user (requires admin or super admin privileges)"
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Update tokens in global variables",
+                  "var responseJson = pm.response.json();",
+                  "if (responseJson.data && responseJson.data.accessToken) {",
+                  "    pm.globals.set('accessToken', responseJson.data.accessToken);",
+                  "    pm.globals.set('refreshToken', responseJson.data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh-token"
+              ]
+            },
+            "description": "Get a new access token using a refresh token"
+          },
+          "response": []
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oldPassword\": \"currentPassword\",\n  \"newPassword\": \"newPassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/change-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "change-password"
+              ]
+            },
+            "description": "Change the current user's password"
+          },
+          "response": []
+        },
+        {
+          "name": "Google OAuth Login",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/google?tenantId={{tenantId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "google"
+              ],
+              "query": [
+                {
+                  "key": "tenantId",
+                  "value": "{{tenantId}}"
+                }
+              ]
+            },
+            "description": "Initiate Google OAuth login"
+          },
+          "response": []
+        },
+        {
+          "name": "Microsoft OAuth Login",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/outlook?tenantId={{tenantId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "outlook"
+              ],
+              "query": [
+                {
+                  "key": "tenantId",
+                  "value": "{{tenantId}}"
+                }
+              ]
+            },
+            "description": "Initiate Microsoft OAuth login"
+          },
+          "response": []
+        }
+      ],
+      "description": "Authentication-related endpoints"
+    },
+    {
+      "name": "Admin Operations",
+      "item": [
+        {
+          "name": "Create Tenant Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@newtenant.com\",\n  \"password\": \"adminpass123\",\n  \"firstName\": \"Tenant\",\n  \"lastName\": \"Admin\",\n  \"tenantId\": \"{{tenantId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/tenant-admin",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "tenant-admin"
+              ]
+            },
+            "description": "Create a new admin for a specific tenant (Super Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Tenant with Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New School\",\n  \"domain\": \"newschool.edu\",\n  \"adminEmail\": \"admin@newschool.edu\",\n  \"adminPassword\": \"adminpass123\",\n  \"adminFirstName\": \"School\",\n  \"adminLastName\": \"Administrator\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/tenant-with-admin",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "tenant-with-admin"
+              ]
+            },
+            "description": "Create a new tenant and admin in one operation (Super Admin only)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Super Admin specific operations"
+    },
+    {
+      "name": "Tenant Management",
+      "item": [
+        {
+          "name": "Create New Tenant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Optionally save the newly created tenant ID to global variable",
+                  "var responseJson = pm.response.json();",
+                  "if (responseJson.data && responseJson.data.id) {",
+                  "    pm.globals.set('tenantId', responseJson.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New School\",\n  \"domain\": \"newschool.edu\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tenants",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tenants"
+              ]
+            },
+            "description": "Create a new tenant (school)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Tenants",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tenants",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tenants"
+              ]
+            },
+            "description": "Get a list of all tenants (schools)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Tenant by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tenants/{{tenantId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tenants",
+                "{{tenantId}}"
+              ]
+            },
+            "description": "Get details of a specific tenant (school)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Tenant",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated School Name\",\n  \"domain\": \"updatedschool.edu\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tenants/{{tenantId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tenants",
+                "{{tenantId}}"
+              ]
+            },
+            "description": "Update a tenant's information"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Tenant",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tenants/{{tenantId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tenants",
+                "{{tenantId}}"
+              ]
+            },
+            "description": "Delete a tenant (school) and all its data"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints for managing school tenants (requires super admin)"
+    },
+    {
+      "name": "User Management",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "{{tenantId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "description": "Get all users within a tenant (admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "{{tenantId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "description": "Get a specific user's details"
+          },
+          "response": []
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "{{tenantId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Updated\",\n  \"lastName\": \"Name\",\n  \"email\": \"updated@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "description": "Update a user's information"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "{{tenantId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "description": "Delete a user (admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Student Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "{{tenantId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}",
+                "profile"
+              ]
+            },
+            "description": "Get a student's profile information"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Student Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "{{tenantId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"grade\": \"11th\",\n  \"address\": \"456 Oak Avenue\",\n  \"phoneNumber\": \"555-987-6543\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}",
+                "profile"
+              ]
+            },
+            "description": "Update a student's profile information"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints for managing users within a tenant"
+    },
+    {
+      "name": "Student Routes",
+      "item": [
+        {
+          "name": "Get Own Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "{{tenantId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/student/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "student",
+                "profile"
+              ]
+            },
+            "description": "Student access to their own profile"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Own Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "{{tenantId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"grade\": \"11th\",\n  \"address\": \"456 Oak Avenue\",\n  \"phoneNumber\": \"555-987-6543\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/student/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "student",
+                "profile"
+              ]
+            },
+            "description": "Student update to their own profile"
+          },
+          "response": []
+        }
+      ],
+      "description": "Direct student routes"
+    },
+    {
+      "name": "Audit Logs",
+      "item": [
+        {
+          "name": "Get All Failed Logins Across Tenants",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tenants/audit/failed-logins",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tenants",
+                "audit",
+                "failed-logins"
+              ]
+            },
+            "description": "Get all failed login attempts across all tenants"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Failed Logins for a Specific Tenant",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tenants/audit/{{tenantId}}/failed-logins",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tenants",
+                "audit",
+                "{{tenantId}}",
+                "failed-logins"
+              ]
+            },
+            "description": "Get failed login attempts for a specific tenant"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Audit Logs for a Specific Tenant",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tenants/audit/{{tenantId}}/logs?action=user_login&status=success&startDate=2023-01-01&endDate=2023-03-15&limit=10&page=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tenants",
+                "audit",
+                "{{tenantId}}",
+                "logs"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "user_login"
+                },
+                {
+                  "key": "status",
+                  "value": "success"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2023-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2023-03-15"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Get audit logs for a specific tenant with filtering options"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints for audit logging (requires super admin)"
+    },
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/../health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "..",
+                "health"
+              ]
+            },
+            "description": "Check the health status of the API"
+          },
+          "response": []
+        }
+      ],
+      "description": "System-related endpoints"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "superAdminEmail",
+      "value": "admin@example.com",
+      "type": "string"
+    },
+    {
+      "key": "superAdminPassword",
+      "value": "admin123",
+      "type": "string"
+    }
+  ]
+}

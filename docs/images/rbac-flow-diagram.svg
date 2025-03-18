@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600">
+    <!-- Background -->
+    <rect width="900" height="600" fill="#f9f9f9"/>
+
+    <!-- Title -->
+    <text x="450" y="40" font-family="Arial" font-size="20" text-anchor="middle" font-weight="bold">Role-Based User Creation Flow</text>
+
+    <!-- Start -->
+    <ellipse cx="450" cy="90" rx="70" ry="30" fill="#e8f5e9" stroke="#1b5e20" stroke-width="2"/>
+    <text x="450" y="95" font-family="Arial" font-size="14" text-anchor="middle">Start</text>
+
+    <!-- Who is making request? -->
+    <rect x="370" y="140" width="160" height="50" rx="5" fill="#ffebee" stroke="#c62828" stroke-width="2"/>
+    <text x="450" y="170" font-family="Arial" font-size="14" text-anchor="middle">Who is making request?</text>
+
+    <!-- Super Admin Path -->
+    <text x="200" y="230" font-family="Arial" font-size="14" text-anchor="middle">Super Admin</text>
+    <rect x="100" y="250" width="200" height="50" rx="5" fill="#e8eaf6" stroke="#3f51b5" stroke-width="2"/>
+    <text x="200" y="280" font-family="Arial" font-size="14" text-anchor="middle">Can create any user</text>
+
+    <!-- Tenant Admin Path -->
+    <text x="450" y="230" font-family="Arial" font-size="14" text-anchor="middle">Tenant Admin</text>
+    <rect x="350" y="250" width="200" height="50" rx="5" fill="#e8eaf6" stroke="#3f51b5" stroke-width="2"/>
+    <text x="450" y="280" font-family="Arial" font-size="14" text-anchor="middle">Limited to own tenant</text>
+
+    <!-- Student Path -->
+    <text x="700" y="230" font-family="Arial" font-size="14" text-anchor="middle">Student or Public</text>
+    <rect x="600" y="250" width="200" height="50" rx="5" fill="#e8eaf6" stroke="#3f51b5" stroke-width="2"/>
+    <text x="700" y="280" font-family="Arial" font-size="14" text-anchor="middle">Cannot create admins</text>
+
+    <!-- Admin check -->
+    <polygon points="400,350 500,350 450,400" fill="#ede7f6" stroke="#4527a0" stroke-width="2"/>
+    <text x="450" y="375" font-family="Arial" font-size="12" text-anchor="middle">Creating admin?</text>
+
+    <!-- Tenant check -->
+    <polygon points="180,350 220,350 200,400" fill="#ede7f6" stroke="#4527a0" stroke-width="2"/>
+    <text x="200" y="375" font-family="Arial" font-size="12" text-anchor="middle">Any tenant</text>
+
+    <!-- Student only -->
+    <polygon points="680,350 720,350 700,400" fill="#ede7f6" stroke="#4527a0" stroke-width="2"/>
+    <text x="700" y="375" font-family="Arial" font-size="12" text-anchor="middle">Student only</text>
+
+    <!-- Connection from Start to Who -->
+    <line x1="450" y1="120" x2="450" y2="140" stroke="#333" stroke-width="2"/>
+    <polygon points="450,140 445,130 455,130" fill="#333"/>
+
+    <!-- Connections from Who to paths -->
+    <line x1="450" y1="190" x2="200" y2="230" stroke="#333" stroke-width="2"/>
+    <polygon points="200,230 207,222 210,232" fill="#333"/>
+
+    <line x1="450" y1="190" x2="450" y2="230" stroke="#333" stroke-width="2"/>
+    <polygon points="450,230 445,220 455,220" fill="#333"/>
+
+    <line x1="450" y1="190" x2="700" y2="230" stroke="#333" stroke-width="2"/>
+    <polygon points="700,230 693,222 690,232" fill="#333"/>
+
+    <!-- Connections to decision diamonds -->
+    <line x1="200" y1="300" x2="200" y2="350" stroke="#333" stroke-width="2"/>
+    <polygon points="200,350 195,340 205,340" fill="#333"/>
+
+    <line x1="450" y1="300" x2="450" y2="350" stroke="#333" stroke-width="2"/>
+    <polygon points="450,350 445,340 455,340" fill="#333"/>
+
+    <line x1="700" y1="300" x2="700" y2="350" stroke="#333" stroke-width="2"/>
+    <polygon points="700,350 695,340 705,340" fill="#333"/>
+
+    <!-- Results -->
+    <rect x="150" y="430" width="100" height="50" rx="5" fill="#e8f5e9" stroke="#388e3c" stroke-width="2"/>
+    <text x="200" y="460" font-family="Arial" font-size="12" text-anchor="middle">Create User</text>
+
+    <rect x="400" y="430" width="100" height="50" rx="5" fill="#e8f5e9" stroke="#388e3c" stroke-width="2"/>
+    <text x="450" y="460" font-family="Arial" font-size="12" text-anchor="middle">Create User</text>
+
+    <rect x="650" y="430" width="100" height="50" rx="5" fill="#e8f5e9" stroke="#388e3c" stroke-width="2"/>
+    <text x="700" y="460" font-family="Arial" font-size="12" text-anchor="middle">Create Student</text>
+
+    <rect x="510" y="430" width="100" height="50" rx="5" fill="#ffcdd2" stroke="#d32f2f" stroke-width="2"/>
+    <text x="560" y="460" font-family="Arial" font-size="12" text-anchor="middle">Access Denied</text>
+
+    <!-- Connections to results -->
+    <line x1="200" y1="400" x2="200" y2="430" stroke="#333" stroke-width="2"/>
+    <polygon points="200,430 195,420 205,420" fill="#333"/>
+
+    <line x1="435" y1="400" x2="400" y2="430" stroke="#333" stroke-width="2"/>
+    <text x="405" y="425" font-family="Arial" font-size="10">Own tenant</text>
+    <polygon points="400,430 405,420 410,425" fill="#333"/>
+
+    <line x1="465" y1="400" x2="510" y2="430" stroke="#333" stroke-width="2"/>
+    <text x="475" y="425" font-family="Arial" font-size="10">Other tenant</text>
+    <polygon points="510,430 500,420 495,425" fill="#333"/>
+
+    <line x1="700" y1="400" x2="700" y2="430" stroke="#333" stroke-width="2"/>
+    <polygon points="700,430 695,420 705,420" fill="#333"/>
+
+    <!-- End -->
+    <ellipse cx="450" cy="520" rx="70" ry="30" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="2"/>
+    <text x="450" y="525" font-family="Arial" font-size="14" text-anchor="middle">End</text>
+
+    <!-- Connections to End -->
+    <line x1="200" y1="480" x2="400" y2="520" stroke="#333" stroke-width="2"/>
+    <polygon points="400,520 390,515 390,525" fill="#333"/>
+
+    <line x1="450" y1="480" x2="450" y2="490" stroke="#333" stroke-width="2"/>
+    <polygon points="450,490 445,480 455,480" fill="#333"/>
+
+    <line x1="700" y1="480" x2="500" y2="520" stroke="#333" stroke-width="2"/>
+    <polygon points="500,520 510,515 510,525" fill="#333"/>
+
+    <line x1="560" y1="480" x2="470" y2="510" stroke="#333" stroke-width="2"/>
+    <polygon points="470,510 480,505 475,515" fill="#333"/>
+</svg>
